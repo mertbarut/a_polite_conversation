@@ -2,9 +2,9 @@ CC			= clang++
 
 SRC			= main.cpp
 
-CFLAGS		= -Wall -Wextra -Werror -g -o
+CFLAGS		= -Wall -Wextra -Werror -std=c++11 -g -o
 
-RM			= rm -f
+RM			= rm -rf
 
 NAME		= a_polite_conversation
 
@@ -16,7 +16,7 @@ $(NAME):
 			$(CC) $(SRC) $(LINKS) $(CFLAGS) $(NAME)
 
 clean:
-			$(RM)
+			$(RM) $(NAME).dSYM
 
 fclean:		clean
 			$(RM) $(NAME)
