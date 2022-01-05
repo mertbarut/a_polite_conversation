@@ -195,7 +195,7 @@ int main(void)
 {
 	int level = 0;
 	std::vector<std::string> promptset {
-		"Shall we have a polite conversation?",												// 0		
+		"Shall we have a polite conversation? (Use ARROW UP/DOWN for predefined options)",	// 0		
 		"Oh, I think you're a robot.",														// 1
 		"This Turing Test isn't for you to see if I'm a robot. It is to see if you are.",	// 2
 		"I'm simply not convinced you are a human. I think you might be a robot.",			// 3
