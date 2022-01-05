@@ -1,25 +1,9 @@
-#include <cctype>
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
 #include "readline/readline.h"
 #include "readline/history.h"
-#include <iterator>
-#include <limits.h>
-#include <stdlib.h>
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <chrono>
-#include <thread>
-#include <curses.h>
-#include <stdio.h>
-#include <ctype.h>
-
-#define WIDTH 30
-#define HEIGHT 10 
+#include <iostream>
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"
@@ -34,41 +18,10 @@
 template <typename Container>
 bool contains(const Container& cont, const std::string& s)
 {
-    return std::search(cont.begin(), cont.end(), s.begin(), s.end()) != cont.end();
+	return std::search(cont.begin(), cont.end(), s.begin(), s.end()) != cont.end();
 }
 
-const char *choices[] = { 
-			"Choice 1",
-			"Choice 2",
-			"Choice 3",
-			"Choice 4",
-			"Exit"
-		  };
-
-int n_choices = sizeof(choices) / sizeof(char *);
-
-void print_menu(WINDOW *menu_win, int highlight)
-{
-	int x, y, i;	
-
-	x = 2;
-	y = 2;
-	box(menu_win, 0, 0);
-	for(i = 0; i < n_choices; ++i)
-	{	
-		if (highlight == i + 1) /* High light the present choice */
-		{	wattron(menu_win, A_REVERSE); 
-			mvwprintw(menu_win, y, x, "%s", choices[i]);
-			wattroff(menu_win, A_REVERSE);
-		}
-		else
-			mvwprintw(menu_win, y, x, "%s", choices[i]);
-		++y;
-	}
-	wrefresh(menu_win);
-}
-
-static int	check_space(char *s)
+int	check_space(const char *s)
 {
 	int		i;
 	size_t	cnt;
@@ -86,14 +39,22 @@ static int	check_space(char *s)
 	return (0);
 }
 
-void	begin_conversation()
+bool is_question(std::string& str)
 {
-	std::cout << CYAN << "Shall we have a polite conversation?" << GREEN << std::endl;
-	add_history((const char *)"");
-	add_history((const char *)"OKAY, I GUESS.");
-	add_history((const char *)"SURE!");
-	add_history((const char *)"WHY WOULD I WANT THAT?");
-	add_history((const char *)"NOT INTERESTED.");
+	if (contains(str, "WHY")
+		|| contains(str, "WHAT")
+		|| contains(str, "HOW")
+		|| contains(str, "WHO")
+		|| contains(str, "WHICH"))
+		return true;
+	return false;
+}
+
+void	begin_conversation(std::vector<std::string>& prompts, std::vector<std::vector<std::string> >& answers)
+{
+	std::cout << CYAN << prompts[0] << GREEN << std::endl;
+	for (size_t i = 0; i < answers[0].size(); ++i)
+		add_history(answers[0][i].c_str());
 }
 
 void robotic_answer(std::vector<std::string>& answers, std::vector<std::string>& prompts, int level)
@@ -153,8 +114,8 @@ void	let_me_free()
 	}
 	system("stty cooked");
 	std::cout << CYAN << "Goodbye robot." << RESET << std::endl;
-	for (int i = 0; i < 10000; i++)
-		if (i % 1000 == 0)
+	for (int i = 0; i < 1000000; i++)
+		if (i % 100000 == 0)
 			std::cout << std::endl;
 }
 
@@ -186,7 +147,7 @@ void	goodbye_robot()
 	exit(1);
 }
 
-void	converse(std::vector<std::string> prompts, std::vector<std::vector<std::string> > answers, int level)
+void	converse(std::vector<std::string>& prompts, std::vector<std::vector<std::string> >& answers, int level)
 {
 	char		*line;
 	std::string	line_str;
@@ -198,33 +159,30 @@ void	converse(std::vector<std::string> prompts, std::vector<std::vector<std::str
 		clear_history();
 		for (size_t i = 0; i < strlen(line); i++)
 			line[i] = toupper(line[i]);
+		line_str = static_cast<std::string>(line);
 		if (contains(line_str, "POWER"))
 		{
-			std::cout << CYAN << *(prompts.begin() + 4) << GREEN << std::endl;
-			std::cout << RESET;
-			exit(EXIT_FAILURE);
-		}		
-		line_str = static_cast<std::string>(line);
-		if (level == 0 && contains(line_str, "NO"))
 			std::cout << CYAN << *(prompts.begin() + 5) << GREEN << std::endl;
-
-		else if ( level != 4 && (contains(line_str, "WHY")|| contains(line_str, "WHAT") || contains(line_str, "HOW") || contains(line_str, "WHO") || contains(line_str, "WHICH")))
+			std::cout << RESET;
+			goodbye_robot();
+		}		
+		if (level == 1 && contains(line_str, "NO"))
 		{
 			std::cout << CYAN << *(prompts.begin() + 6) << GREEN << std::endl;
-		}
-		else
-		{
-			std::cout << CYAN << *(prompts.begin() + level) << GREEN << std::endl;
-		}
-		if (level == 4)
-		{
-			std::cout << RESET;
-			//exit(EXIT_FAILURE);
 			goodbye_robot();
 		}
-		if (contains(line_str, "WHY")|| contains(line_str, "WHAT") || contains(line_str, "HOW") || contains(line_str, "WHO") || contains(line_str, "WHICH"))
-			for (std::vector<std::string>::size_type j = 0; j < answers[4].size(); j++)
-				add_history(answers[4][j].c_str());
+		else if ( level != 4 && is_question(line_str))
+			std::cout << CYAN << *(prompts.begin() + 7) << GREEN << std::endl;
+		else
+			std::cout << CYAN << *(prompts.begin() + level) << GREEN << std::endl;
+		if (level == 5)
+		{
+			std::cout << RESET;
+			goodbye_robot();
+		}
+		if (is_question(line_str))
+			for (std::vector<std::string>::size_type j = 0; j < answers[5].size(); j++)
+				add_history(answers[5][j].c_str());
 		else
 			for (std::vector<std::string>::size_type j = 0; j < answers[level].size(); j++)
 				add_history(answers[level][j].c_str());
@@ -237,16 +195,23 @@ int main(void)
 {
 	int level = 0;
 	std::vector<std::string> promptset {
-		"Oh, I think you're a robot.",														// 0
-		"This Turing Test isn't for you to see if I'm a robot. It is to see if you are.",	// 1
-		"I'm simply not convinced you are a human. I think you might be a robot.",			// 2
-		"Yes, definitely a robot.",															// 3
-		"You have failed the Turing Test. You are a robot.",								// 4
-		"Then why are you here?",															// 5
-		"Why do you think you get to ask all the questions?"								// 6
+		"Shall we have a polite conversation?",												// 0		
+		"Oh, I think you're a robot.",														// 1
+		"This Turing Test isn't for you to see if I'm a robot. It is to see if you are.",	// 2
+		"I'm simply not convinced you are a human. I think you might be a robot.",			// 3
+		"Yes, definitely a robot.",															// 4
+		"You have failed the Turing Test. You are a robot.",								// 5
+		"Then why are you here?",															// 6
+		"Why do you think you get to ask all the questions?"								// 7
 	};
 
 	std::vector<std::vector<std::string>> answerset {
+		{
+			"NOT INTERESTED.",
+			"WHY WOULD I WANT THAT?",
+			"OKAY, I GUESS.",
+			"SURE!",
+		},
 		{
 			"YOU'RE A ROBOT.",
 			"NO I'M NOT.",
@@ -279,7 +244,7 @@ int main(void)
 		},
 	};
 
-	begin_conversation();
-	converse(promptset, answerset, level);
+	begin_conversation(promptset, answerset);
+	converse(promptset, answerset, level + 1);
 	return 0;
 }

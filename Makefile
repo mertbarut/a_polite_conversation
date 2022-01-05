@@ -2,18 +2,18 @@ CC			= clang++
 
 SRC			= main.cpp
 
-CFLAGS		= -Wall -Wextra -Werror -std=c++11 -g -o
+CFLAGS		= -Wall -Wextra -Werror -std=c++11
 
 RM			= rm -rf
 
 NAME		= a_polite_conversation
 
-LINKS		= -lreadline -lncurses
+LINKS		= -lreadline
 
 all:		$(NAME)
 
 $(NAME):
-			$(CC) $(SRC) $(CFLAGS) $(NAME) $(LINKS)
+			$(CC) $(SRC) $(LINKS) $(CFLAGS) -o $(NAME) 
 
 clean:
 			$(RM) $(NAME).dSYM
