@@ -8,12 +8,12 @@ RM			= rm -rf
 
 NAME		= a_polite_conversation
 
-LINKS		= -lreadline
+LINKS		= -lreadline -lncurses
 
 all:		$(NAME)
 
 $(NAME):
-			$(CC) $(SRC) $(LINKS) $(CFLAGS) $(NAME)
+			$(CC) $(SRC) $(CFLAGS) $(NAME) $(LINKS)
 
 clean:
 			$(RM) $(NAME).dSYM
